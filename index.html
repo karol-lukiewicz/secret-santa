@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css.min.css"/>
+    <style>
+        @media all and (max-width: 1024px) {
+            table thead {
+                display: table-header-group !important;
+            }
+            table tr {
+                display: table-row !important;
+            }
+            table tr td,table tr th {
+                display: table-cell !important;
+                padding: 0.928125rem 1.125rem !important;
+            }
+            table tr th {
+                border-bottom: 0.135rem solid #595959 !important;
+            }
+        }
+    </style>
+    <title>Secret Santa&#x1f384;&#x1f381;</title>
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+</head>
+<body>
+<section style="margin-bottom: 50px;">
+    <h2>Lista osób</h2>
+    <ul id="names">
+    </ul>
+    <input id="newName" type="text"/>
+    <button type="button" id="addName">Dodaj osobę</button>
+</section>
+<section id="sectionDraw" style="display: grid;">
+    <button type="button" id="draw">Losuj</button>
+</section>
+<section id="sectionResults" style="display: none;">
+    <h2>&#x1f385;Przyporządkowanie&#x1f381;</h2>
+    <table id="tableResults">
+        <thead>
+        <tr>
+            <th>Osoba</th>
+            <th>Kupuje prezent dla</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+    <button type="button" id="drawAgain">Losuj ponownie</button>
+</section>
+<script type="text/javascript">
+    (function () {
+        const newNameInput = document.getElementById("newName");
+        const namesList = document.getElementById("names");
+        const addNameButton = document.getElementById("addName");
+        const drawSection = document.getElementById("sectionDraw");
+        const drawButton = document.getElementById("draw");
+        const resultSection = document.getElementById("sectionResults");
+        const resultsTable = document.getElementById("tableResults");
+        const resultsTableBody = resultsTable.getElementsByTagName("tbody")[0];
+        const drawAgainButton = document.getElementById("drawAgain");
+
+        function drawRandomly(names) {
+            const nameInRandomOrder = Array.from(names).sort(() => Math.random() - 0.5)
+            return nameInRandomOrder.map((name, index, array) => {
+                const secretSanta = array[index + 1] ? array[index + 1] : array[0];
+                return [secretSanta, name]
+            });
+        }
+
+        function drawTable(pairs) {
+            resultsTableBody.innerHTML = "";
+            return pairs.forEach(([giver, recipient]) => {
+                const giverTd = document.createElement("td");
+                giverTd.appendChild(document.createTextNode(giver));
+                const recipientTd = document.createElement("td");
+                recipientTd.appendChild(document.createTextNode(recipient));
+                const tr = document.createElement("tr");
+                tr.appendChild(giverTd);
+                tr.appendChild(recipientTd);
+                resultsTableBody.appendChild(tr);
+            });
+        }
+
+        function onDrawButton() {
+            const names = Array.from(
+                namesList.getElementsByTagName("li")
+            ).map(a => a.innerText);
+            if (names.length < 2) {
+                alert("Dodaj więcej osób.")
+                return;
+            }
+            if (new Set(names).size !== names.length) {
+                alert("Osoby nie mogą się powtarzać! Zacznij od nowa.")
+                window.location.reload();
+                return;
+            }
+
+            drawSection.style.display = "none";
+            resultSection.style.display = "grid";
+            const pairs = drawRandomly(names)
+            console.table(pairs);
+            drawTable(pairs);
+        }
+
+        function onAddName() {
+            const name = newNameInput.value;
+            if (name) {
+                const li = document.createElement("li");
+                li.appendChild(document.createTextNode(name));
+                namesList.appendChild(li);
+                newNameInput.value = "";
+            } else alert("Wypełnij imię");
+            newNameInput.focus();
+            newNameInput.select();
+        }
+
+        addNameButton.addEventListener("click", onAddName);
+        drawButton.addEventListener("click", onDrawButton);
+        drawAgainButton.addEventListener("click", onDrawButton);
+        newNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                onAddName();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
