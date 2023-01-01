@@ -9,86 +9,212 @@
             table thead {
                 display: table-header-group !important;
             }
+
             table tr {
                 display: table-row !important;
             }
-            table tr td,table tr th {
+
+            table tr td, table tr th {
                 display: table-cell !important;
                 padding: 0.928125rem 1.125rem !important;
             }
+
             table tr th {
                 border-bottom: 0.135rem solid #595959 !important;
             }
         }
+
+        #people {
+            margin-bottom: 50px;
+            display: grid;
+        }
+
+        #table-results {
+            margin-bottom: 0;
+        }
+
+        #share-options {
+            display: grid;
+        }
+
+        #shareable-url-section {
+            display: flex;
+        }
+
+        /* text in input should not jump after clicking button,
+           try to make line item with input and button has height as rest of list items */
+        #names li {
+            padding-top: calc(1px + 0.3375rem);
+            padding-bottom: calc(1px + 0.3375rem);
+        }
+
+        #names li#add-name-item {
+            padding: 0;
+        }
+
+        #names li span {
+            margin-left: calc(1px + 0.39375rem);
+        }
+
+        #new-name {
+            margin-bottom: 0;
+            width: calc(50% - 0.225rem);
+        }
+
+        #add-name {
+            margin-bottom: 0;
+            width: calc(50% - 0.225rem - 1px);
+            margin-right: 0;
+            height: calc(2px + 2.53125rem);
+            padding: 0;
+        }
+
+        /* delete item button positioning */
+        #names li {
+            position: relative;
+        }
+
+        #names .name-delete {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            /* TODO karol make the remove button more accessible! */
+        }
+
+        /* toggling logic */
+        .read-only #add-name-item,
+        .show-results #draw,
+        .show-results #names li button,
+        #section-results,
+        #edit-list {
+            display: none;
+        }
+
+        .show-results #section-results {
+            display: block;
+        }
+
+        .show-results #edit-list {
+            padding-top: 0;
+            padding-bottom: 0;
+            vertical-align: top;
+            margin-bottom: 0;
+            display: inline;
+        }
+
     </style>
-    <title>Secret Santa&#x1f384;&#x1f381;</title>
+    <title>Tajny Mikołaj&#x1f384;&#x1f381;</title>
     <link rel="icon"
           href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
 </head>
-<body>
-<section style="margin-bottom: 50px;">
-    <h2>Lista osób</h2>
-    <ul id="names">
-    </ul>
-    <input id="newName" type="text"/>
-    <button type="button" id="addName">Dodaj osobę</button>
-</section>
-<section id="sectionDraw" style="display: grid;">
+<body class="">
+<section id="people">
+    <h2>Lista osób
+        <button type="button" id="edit-list" title="Edytuj Listę">&#9998;</button>
+    </h2>
+    <ol id="names">
+        <li id="add-name-item">
+            <input id="new-name" type="text"/>
+            <button type="button" id="add-name">Dodaj osobę</button>
+        </li>
+    </ol>
+
     <button type="button" id="draw">Losuj</button>
 </section>
-<section id="sectionResults" style="display: none;">
-    <h2>&#x1f385;Przyporządkowanie&#x1f381;</h2>
-    <table id="tableResults">
+<section id="section-results">
+    <h2>&#x1f385;Przypisanie&#x1f381;</h2>
+    <table id="table-results">
         <thead>
         <tr>
-            <th>Osoba</th>
-            <th>Kupuje prezent dla</th>
+            <th>Mikołaj</th>
+            <th>Obdarowany</th>
+            <th style="display: none"></th>
         </tr>
         </thead>
         <tbody>
-
         </tbody>
     </table>
-    <button type="button" id="drawAgain">Losuj ponownie</button>
+    <section id="share-options">
+        <h3>Udostępnij wszystko</h3>
+        <section id="shareable-url-section">
+            <input id="shareable-url" type="text"/>
+            <button id="copy-shareable-url" title="Kopiuj do schowka">⧉</button>
+        </section>
+        <button type="button" id="share-all">Udostępnij wszystkie przypisania</button>
+    </section>
 </section>
 <script type="text/javascript">
     (function () {
-        const newNameInput = document.getElementById("newName");
-        const namesList = document.getElementById("names");
-        const addNameButton = document.getElementById("addName");
-        const drawSection = document.getElementById("sectionDraw");
-        const drawButton = document.getElementById("draw");
-        const resultSection = document.getElementById("sectionResults");
-        const resultsTable = document.getElementById("tableResults");
-        const resultsTableBody = resultsTable.getElementsByTagName("tbody")[0];
-        const drawAgainButton = document.getElementById("drawAgain");
+        const newNameInput = document.getElementById("new-name");
+        newNameInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                onAddName();
+            }
+        });
 
-        function drawRandomly(names) {
-            const nameInRandomOrder = Array.from(names).sort(() => Math.random() - 0.5)
-            return nameInRandomOrder.map((name, index, array) => {
-                const secretSanta = array[index + 1] ? array[index + 1] : array[0];
-                return [secretSanta, name]
-            });
+        document.getElementById("add-name").addEventListener("click", onAddName);
+
+        function onAddName() {
+            const name = newNameInput.value;
+            if (name) {
+                if (getNames().includes(name)) {
+                    alert("Imię już istnieje")
+                } else {
+                    addName(name);
+                    newNameInput.value = "";
+                }
+            } else alert("Wypełnij imię");
+            newNameInput.focus();
+            newNameInput.select();
         }
 
-        function drawTable(pairs) {
-            resultsTableBody.innerHTML = "";
-            return pairs.forEach(([giver, recipient]) => {
-                const giverTd = document.createElement("td");
-                giverTd.appendChild(document.createTextNode(giver));
-                const recipientTd = document.createElement("td");
-                recipientTd.appendChild(document.createTextNode(recipient));
-                const tr = document.createElement("tr");
-                tr.appendChild(giverTd);
-                tr.appendChild(recipientTd);
-                resultsTableBody.appendChild(tr);
-            });
+        function getNames() {
+            return Array.from(
+                document.querySelectorAll("#names li>span")
+            ).map(a => a.innerText);
         }
+
+        function addName(name) {
+            const nameSpan = document.createElement("span");
+            nameSpan.innerHTML = name;
+            const deleteButton = document.createElement("button");
+            deleteButton.setAttribute("type", "button");
+            deleteButton.setAttribute("title", `Usuń ${name}`);
+            deleteButton.classList.add("name-delete");
+            deleteButton.innerHTML = "&#10006;";
+            deleteButton.addEventListener("click", onRemoveName);
+            const li = document.createElement("li");
+            li.appendChild(nameSpan);
+            li.appendChild(deleteButton);
+            document.getElementById("names").insertBefore(li, newNameInput.parentElement);
+        }
+
+
+        document.getElementById("edit-list").addEventListener("click", enableEditMode);
+
+        function enableEditMode() {
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete("d");
+            newUrl.searchParams.delete("s");
+            window.history.pushState({}, "", newUrl);
+            document.body.classList.remove("show-results");
+            document.body.classList.remove("read-only");
+            newNameInput.focus();
+            newNameInput.select();
+        }
+
+        function onRemoveName(event) {
+            event.currentTarget.parentElement.remove()
+        }
+
+        document.getElementById("draw").addEventListener("click", onDrawButton);
 
         function onDrawButton() {
-            const names = Array.from(
-                namesList.getElementsByTagName("li")
-            ).map(a => a.innerText);
+            const names = getNames();
             if (names.length < 2) {
                 alert("Dodaj więcej osób.")
                 return;
@@ -99,33 +225,137 @@
                 return;
             }
 
-            drawSection.style.display = "none";
-            resultSection.style.display = "grid";
+            showResultsTable();
             const pairs = drawRandomly(names)
+            updateUrl(pairs);
             console.table(pairs);
             drawTable(pairs);
         }
 
-        function onAddName() {
-            const name = newNameInput.value;
-            if (name) {
-                const li = document.createElement("li");
-                li.appendChild(document.createTextNode(name));
-                namesList.appendChild(li);
-                newNameInput.value = "";
-            } else alert("Wypełnij imię");
-            newNameInput.focus();
-            newNameInput.select();
+        function showResultsTable() {
+            document.body.classList.add("show-results");
+            document.body.classList.add("read-only");
         }
 
-        addNameButton.addEventListener("click", onAddName);
-        drawButton.addEventListener("click", onDrawButton);
-        drawAgainButton.addEventListener("click", onDrawButton);
-        newNameInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                onAddName();
+        function drawRandomly(names) {
+            const nameInRandomOrder = Array.from(names).sort(() => Math.random() - 0.5)
+            return nameInRandomOrder.map((name, index, array) => {
+                const secretSanta = array[index + 1] ? array[index + 1] : array[0];
+                return [secretSanta, name]
+            }).sort(([aName], [bName]) => aName.localeCompare(bName));
+        }
+
+        function updateUrl(pairs) {
+            const jsonData = JSON.stringify(pairs)
+            const checkSum = calculateCheckSum(jsonData)
+
+            const newUrl = new URL(window.location);
+            for (const param of newUrl.searchParams.keys()) {
+                if (param !== "d" || param !== "d") {
+                    newUrl.searchParams.delete(param);
+                }
             }
-        });
+            newUrl.searchParams.set("d", btoa(jsonData).replaceAll("=", ""));
+            newUrl.searchParams.set("s", checkSum);
+            document.getElementById("shareable-url").value = newUrl.toString();
+            if (window.location.href !== newUrl.toString()) {
+                window.history.pushState({}, "", newUrl);
+            }
+        }
+
+        function calculateCheckSum(string) {
+            return String(string
+                .split("")
+                .map(ch => ch.charCodeAt(0))
+                .reduce((val, acc) => ((acc * 31 + val) % (10 ** 6))));
+        }
+
+        const INDIVIDUAL_SHARE_BUTTON = false;
+        function drawTable(pairs) {
+            // if all pairs have result add shareAll button as third row
+            const showSharePerPerson = INDIVIDUAL_SHARE_BUTTON && pairs.every(pair => pair[1])
+
+            const resultsTable = document.getElementById("table-results");
+            const resultsTableBody = resultsTable.getElementsByTagName("tbody")[0];
+
+            resultsTableBody.innerHTML = "";
+            return pairs.forEach(([giver, recipient]) => {
+                const giverTd = document.createElement("td");
+                giverTd.appendChild(document.createTextNode(giver));
+                const recipientTd = document.createElement("td");
+                recipientTd.appendChild(document.createTextNode(recipient));
+                const tr = document.createElement("tr");
+                tr.appendChild(giverTd);
+                tr.appendChild(recipientTd);
+                if (showSharePerPerson) {
+                    const shareButton = document.createElement("button");
+                    shareButton.setAttribute("type", "button");
+                    shareButton.innerHTML = "Udostępnij osobie";
+                    shareButton.addEventListener("click", onShareSingle);
+                    const shareTd = document.createElement("td");
+                    shareTd.appendChild(shareButton);
+                    tr.appendChild(shareTd);
+                }
+                resultsTableBody.appendChild(tr);
+            });
+        }
+
+        function onShareSingle() {
+            // TODO hide share button when navigator.share is missing
+            // TODO implement url that has only information for one person
+            // TODO present information for one person on separate page (not in table)
+            alert("Unsupported");
+        }
+
+        function shareAll() {
+            const shareData = {
+                title: 'Tajny Mikołaj',
+                text: 'Wyniki losowania Tajnego Mikołaja',
+                url: document.getElementById("shareable-url").value
+            }
+            navigator.share(shareData);
+        }
+
+        if (typeof navigator.share === "function") {
+            document.getElementById("share-all").addEventListener("click", shareAll);
+        } else {
+            document.getElementById("share-all").style.display = "none";
+        }
+
+        function loadDataFromUrl(location) {
+            const url = new URL(location);
+            const data = url.searchParams.get("d")
+            const urlCheckSum = url.searchParams.get("s")
+            if (data && urlCheckSum) {
+                showResultsTable();
+                const jsonData = atob(data);
+                const checkSum = calculateCheckSum(jsonData)
+                if (urlCheckSum === checkSum) {
+                    const pairs = JSON.parse(jsonData);
+                    const names = pairs.map(pair => pair[0]).sort()
+                    names.forEach(name => addName(name))
+                    updateUrl(pairs)
+                    console.table(pairs);
+                    drawTable(pairs);
+                } else {
+                    alert("Uszkodzony link!")
+                    enableEditMode();
+                }
+            } else {
+                newNameInput.focus();
+                newNameInput.select();
+            }
+        }
+
+        loadDataFromUrl(window.location)
+
+        function copySharableUrl() {
+            navigator.clipboard.writeText(
+                document.getElementById("shareable-url").value
+            );
+        }
+
+        document.getElementById("copy-shareable-url").addEventListener("click", copySharableUrl);
     })();
 </script>
 </body>
