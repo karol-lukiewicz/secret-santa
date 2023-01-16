@@ -255,7 +255,7 @@
                     newUrl.searchParams.delete(param);
                 }
             }
-            newUrl.searchParams.set("d", btoa(jsonData).replaceAll("=", ""));
+            newUrl.searchParams.set("d", btoa(encodeURIComponent(jsonData)).replaceAll("=", ""));
             newUrl.searchParams.set("s", checkSum);
             document.getElementById("shareable-url").value = newUrl.toString();
             if (window.location.href !== newUrl.toString()) {
@@ -328,7 +328,7 @@
             const urlCheckSum = url.searchParams.get("s")
             if (data && urlCheckSum) {
                 showResultsTable();
-                const jsonData = atob(data);
+                const jsonData = decodeURIComponent(atob(data));
                 const checkSum = calculateCheckSum(jsonData)
                 if (urlCheckSum === checkSum) {
                     const pairs = JSON.parse(jsonData);
